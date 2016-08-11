@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataConnector", "ConsoleApplication1\DataConnector.csproj", "{AF26ACEA-6BF9-4C8F-90C8-0DBF380DC387}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataConnector", "DataConnector\DataConnector.csproj", "{AF26ACEA-6BF9-4C8F-90C8-0DBF380DC387}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
