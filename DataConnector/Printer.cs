@@ -23,7 +23,7 @@ namespace TestFunction
         private static DateTime prev;//used for integral control (i.e. we have speed; to get position change, we need speed*time difference)
         public static Queue<string> commands = new Queue<string>();//, subcommands=new Queue<string>();//commands is passed down from the server; subcommands is similar, but with complex jobs broken down
         public static bool running = true, writing = true;//booleans for continuing/terminating looping threads
-        private static Mutex mut = new Mutex();//for the command queue
+        private static Mutex mut = new Mutex(), mut2=new Mutex();//for the command queue
         private static string view = "Objects/User View/My simulation/Printer001";//root 'folder' for the printer simulation to access on the server; represents the printer object in the data model
         private static TimeSpan len = new TimeSpan(0);//represents the predicted amount of time remaining for the entire set of tasks in the queue
         private static NodeId funccalled, xid, yid, zid, timeid, lengthid, xlim, ylim, zlim, outid, commandid;//handles for specific fields on the server
@@ -67,8 +67,10 @@ namespace TestFunction
                     mut.ReleaseMutex();
                     string _out = parseInput(com);
                     busy = 0;
-                    if(times.Count!=0)
+                    if (times.Count != 0)
+                        mut2.WaitOne();
                         times.Dequeue();
+                    mut2.ReleaseMutex();
                     rebuildTime();
                     writeOut(_out);
                 }
@@ -105,7 +107,7 @@ namespace TestFunction
         {
             _statusServerClient = new StatusServerClient(usr,
                                        pwd,
-                                       "opc.tcp://finoti:62542/StatusEnterprise",
+                                       "opc.tcp://localhost:62542/StatusEnterprise",
                                        "English",
                                        AuthenticationType.Username,
                                        null,
@@ -121,7 +123,7 @@ namespace TestFunction
                 Console.WriteLine("User Credentials failed, attempting Anonymous Login");
                 _statusServerClient = new StatusServerClient("",
                             "",
-                            "opc.tcp://finoti:62542/StatusEnterprise",
+                            "opc.tcp://localhost:62542/StatusEnterprise",
                             "English",
                             AuthenticationType.Anonymous,
                             null,
@@ -427,8 +429,10 @@ namespace TestFunction
                 if (s[0] == ';')
                 {
                     TimeSpan t = tryTime(s.Substring(1).Trim());
+                    mut2.WaitOne();
                     times.Enqueue(t);
                     len = len.Add(t);
+                    mut2.ReleaseMutex();
                     if(t.Ticks!=0)//if a time was successfully read
                         return;//don't parse any more strings
                 }
@@ -510,7 +514,9 @@ namespace TestFunction
                     Console.WriteLine("Could not write data to server, attempting reconnect");
                 }
                 Thread.Sleep(decrement);
+                mut2.WaitOne();
                 len=len.TotalMilliseconds>decrement?len.Subtract(sub):new TimeSpan(0);
+                mut2.ReleaseMutex();
             }
         }
 
